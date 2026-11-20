@@ -1,5 +1,6 @@
 package pages;
 
+import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
@@ -18,12 +19,14 @@ public class PainelOrdenacao extends BasePage {
         return this;
     }
 
+    @Step("Ordenar a listagem \"{ordem}\"")
     public TelaListaTarefas ordenarPor(String ordem) {
         clicar(OPCAO_LISTAGEM);
         clicar(porTexto(ordem));
         return fechar();
     }
 
+    @Step("Definir \"Mostrar tarefas concluídas\" como {exibir}")
     public PainelOrdenacao definirMostrarConcluidas(boolean exibir) {
         WebElement interruptor = esperarVisivel(INTERRUPTOR_MOSTRAR_CONCLUIDAS);
         if (Boolean.parseBoolean(interruptor.getAttribute("checked")) != exibir) {
@@ -32,6 +35,7 @@ public class PainelOrdenacao extends BasePage {
         return this;
     }
 
+    @Step("Fechar o painel de ordenação")
     public TelaListaTarefas fechar() {
         if (estaVisivel(OPCAO_LISTAGEM)) {
             voltar();

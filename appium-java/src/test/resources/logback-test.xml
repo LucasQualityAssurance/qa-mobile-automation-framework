@@ -8,6 +8,7 @@
     <!-- Reduz o ruído das bibliotecas de terceiros -->
     <logger name="org.openqa.selenium" level="WARN"/>
     <logger name="io.appium" level="WARN"/>
+    <logger name="io.qameta.allure" level="WARN"/>
 
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>

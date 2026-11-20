@@ -1,6 +1,10 @@
 package testes;
 
 import base.TesteBase;
+import io.qameta.allure.Description;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
 import net.datafaker.Faker;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,6 +18,7 @@ import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Feature("Organização da lista")
 @DisplayName("Organização da lista")
 class OrganizacaoListaTest extends TesteBase {
 
@@ -24,7 +29,12 @@ class OrganizacaoListaTest extends TesteBase {
     private static final List<String> TAREFAS_DO_TESTE = List.of(REVISAR_PR, APLICAR_PATCH, REVISAR_DOC);
 
     @Test
+    @Severity(SeverityLevel.NORMAL)
     @DisplayName("Buscar, ordenar e identificar tarefas atrasadas")
+    @Description("""
+            Com tarefas de prioridades diferentes cadastradas, valida a busca por termo
+            existente e inexistente, a ordenação por título e por prioridade e o agrupamento
+            das tarefas vencidas como "Atrasado". Ao final, remove a massa criada.""")
     void organizarListaDeTarefas() {
         etapa("Pré-condição: cadastrar tarefas com prioridades diferentes", () -> {
             lista.tocarEmNovaTarefa().informarTitulo(REVISAR_PR).definirPrioridade(Prioridade.BAIXA).salvar();

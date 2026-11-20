@@ -1,6 +1,7 @@
 package pages;
 
 import io.appium.java_client.AppiumBy;
+import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 
 import java.time.LocalDate;
@@ -26,11 +27,13 @@ public class SeletorData extends BasePage {
         return this;
     }
 
+    @Step("Selecionar o atalho \"Hoje\"")
     public SeletorData selecionarHoje() {
         clicar(ATALHO_HOJE);
         return this;
     }
 
+    @Step("Selecionar a data {data} no calendário")
     public SeletorData selecionarData(LocalDate data) {
         navegarAteMes(YearMonth.from(data));
         // Os dias do calendário têm o texto "Quinta-feira, 19 de novembro de 2026"
@@ -38,6 +41,7 @@ public class SeletorData extends BasePage {
         return this;
     }
 
+    @Step("Confirmar a data")
     public void confirmar() {
         clicar(BOTAO_OK);
         esperarDesaparecer(BOTAO_OK);

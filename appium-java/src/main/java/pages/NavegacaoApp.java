@@ -1,6 +1,7 @@
 package pages;
 
 import io.appium.java_client.AppiumBy;
+import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 
 import java.time.Duration;
@@ -22,6 +23,7 @@ public class NavegacaoApp extends BasePage {
     private static final By TITULO_TELA = By.xpath(
             "//*[@resource-id='org.tasks:id/toolbar']//android.widget.TextView");
 
+    @Step("Ir para a lista \"Minhas tarefas\"")
     public TelaListaTarefas irParaMinhasTarefas() {
         for (int tentativa = 0; tentativa < LIMITE_TENTATIVAS; tentativa++) {
             if (estaVisivel(CONTINUAR_SEM_SINCRONIZAR, VERIFICACAO_RAPIDA)) {

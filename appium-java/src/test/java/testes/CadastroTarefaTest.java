@@ -1,6 +1,10 @@
 package testes;
 
 import base.TesteBase;
+import io.qameta.allure.Description;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -9,6 +13,7 @@ import pages.TelaEdicaoTarefa;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Feature("Cadastro de tarefa")
 @DisplayName("Cadastro de tarefa")
 class CadastroTarefaTest extends TesteBase {
 
@@ -20,7 +25,13 @@ class CadastroTarefaTest extends TesteBase {
 
     @Test
     @Tag("smoke")
+    @Severity(SeverityLevel.BLOCKER)
     @DisplayName("Cadastrar tarefa completa com vencimento, prioridade, lista e subtarefa")
+    @Description("""
+            Fluxo ponta a ponta do cadastro de uma tarefa: cria a lista do projeto, preenche
+            todos os dados principais do formulário e valida que a tarefa aparece corretamente
+            na lista principal, no filtro "Hoje", na lista do projeto e que os dados
+            permanecem gravados ao reabri-la. Ao final, remove a massa criada.""")
     void cadastrarTarefaCompleta() {
         etapa("1. Validar a tela inicial \"Minhas tarefas\"", () ->
                 assertThat(lista.obterTituloDaTela()).isEqualTo("Minhas tarefas"));

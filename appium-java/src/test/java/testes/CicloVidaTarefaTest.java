@@ -1,12 +1,17 @@
 package testes;
 
 import base.TesteBase;
+import io.qameta.allure.Description;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import pages.TelaEdicaoTarefa;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Feature("Ciclo de vida da tarefa")
 @DisplayName("Ciclo de vida da tarefa")
 class CicloVidaTarefaTest extends TesteBase {
 
@@ -18,7 +23,12 @@ class CicloVidaTarefaTest extends TesteBase {
     private TelaEdicaoTarefa edicao;
 
     @Test
+    @Severity(SeverityLevel.CRITICAL)
     @DisplayName("Editar, concluir, reabrir e excluir uma tarefa")
+    @Description("""
+            Percorre o ciclo de vida completo de uma tarefa: edição com as opções de
+            continuar editando e descartar, gravação do novo título, conclusão (com e sem
+            exibição das concluídas), reabertura e exclusão definitiva.""")
     void percorrerCicloDeVidaDaTarefa() {
         etapa("Pré-condição: cadastrar a tarefa \"" + TITULO_ORIGINAL + "\"", () -> {
             lista.criarTarefa(TITULO_ORIGINAL);

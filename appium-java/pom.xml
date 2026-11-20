@@ -10,7 +10,7 @@
     <packaging>jar</packaging>
 
     <name>Tasks.org Mobile Automation</name>
-    <description>Automação de testes mobile do aplicativo Tasks.org (Android) com Appium e JUnit.</description>
+    <description>Automação de testes mobile do aplicativo Tasks.org (Android) com Appium, JUnit e Allure.</description>
     <url>https://github.com/tasks/tasks</url>
 
     <properties>
@@ -26,6 +26,8 @@
         <selenium.version>4.53.0</selenium.version>
         <junit.version>6.1.3</junit.version>
         <assertj.version>3.27.7</assertj.version>
+        <allure.version>3.1.1</allure.version>
+        <aspectj.version>1.9.27</aspectj.version>
         <slf4j.version>2.0.20</slf4j.version>
         <logback.version>1.6.8</logback.version>
         <datafaker.version>2.7.0</datafaker.version>
@@ -35,10 +37,12 @@
         <maven-compiler-plugin.version>3.16.0</maven-compiler-plugin.version>
         <maven-resources-plugin.version>3.5.0</maven-resources-plugin.version>
         <maven-surefire-plugin.version>3.6.1</maven-surefire-plugin.version>
+        <allure-maven.version>3.1.0</allure-maven.version>
 
         <!-- Execução (sobrescrevíveis via -D na linha de comando) -->
         <groups/>
         <excludedGroups/>
+        <allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
     </properties>
 
     <dependencyManagement>
@@ -54,6 +58,13 @@
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
                 <version>${junit.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.qameta.allure</groupId>
+                <artifactId>allure-bom</artifactId>
+                <version>${allure.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -84,6 +95,12 @@
             <version>${logback.version}</version>
         </dependency>
 
+        <!-- Relatório -->
+        <dependency>
+            <groupId>io.qameta.allure</groupId>
+            <artifactId>allure-java-commons</artifactId>
+        </dependency>
+
         <!-- Testes -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -102,9 +119,25 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>io.qameta.allure</groupId>
+            <artifactId>allure-junit-platform</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.qameta.allure</groupId>
+            <artifactId>allure-assertj</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>net.datafaker</groupId>
             <artifactId>datafaker</artifactId>
             <version>${datafaker.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
+            <version>${aspectj.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -167,16 +200,33 @@
                 </configuration>
             </plugin>
 
+            <!-- Execução dos testes com AspectJ para os @Step do Allure -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven-surefire-plugin.version}</version>
                 <configuration>
-                    <argLine>-Dfile.encoding=UTF-8</argLine>
+                    <argLine>
+                        -Dfile.encoding=UTF-8
+                        -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar"
+                    </argLine>
                     <groups>${groups}</groups>
                     <excludedGroups>${excludedGroups}</excludedGroups>
                     <testFailureIgnore>false</testFailureIgnore>
                     <trimStackTrace>false</trimStackTrace>
+                    <systemPropertyVariables>
+                        <allure.results.directory>${allure.results.directory}</allure.results.directory>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+
+            <!-- Geração do relatório: mvn allure:serve | mvn allure:report -->
+            <plugin>
+                <groupId>io.qameta.allure</groupId>
+                <artifactId>allure-maven</artifactId>
+                <version>${allure-maven.version}</version>
+                <configuration>
+                    <resultsDirectory>allure-results</resultsDirectory>
                 </configuration>
             </plugin>
         </plugins>

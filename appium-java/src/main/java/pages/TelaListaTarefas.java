@@ -1,6 +1,7 @@
 package pages;
 
 import io.appium.java_client.AppiumBy;
+import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
@@ -94,40 +95,48 @@ public class TelaListaTarefas extends BasePage {
 
     // ---------- Ações ----------
 
+    @Step("Tocar em criar nova tarefa")
     public TelaEdicaoTarefa tocarEmNovaTarefa() {
         clicar(BOTAO_NOVA_TAREFA);
         return new TelaEdicaoTarefa().aguardarCarregamento();
     }
 
+    @Step("Criar a tarefa \"{titulo}\"")
     public TelaListaTarefas criarTarefa(String titulo) {
         return tocarEmNovaTarefa().informarTitulo(titulo).salvar();
     }
 
+    @Step("Abrir a tarefa \"{titulo}\"")
     public TelaEdicaoTarefa abrirTarefa(String titulo) {
         clicar(tituloDaTarefa(titulo));
         return new TelaEdicaoTarefa().aguardarCarregamento();
     }
 
+    @Step("Marcar/desmarcar a conclusão da tarefa \"{titulo}\"")
     public TelaListaTarefas alternarConclusao(String titulo) {
         clicar(caixaConclusao(titulo));
         return this;
     }
 
+    @Step("Expandir o grupo \"{grupo}\"")
     public TelaListaTarefas expandirGrupo(String grupo) {
         clicar(cabecalhoDoGrupo(grupo));
         return this;
     }
 
+    @Step("Abrir o menu lateral")
     public MenuLateral abrirMenuLateral() {
         clicar(BOTAO_MENU);
         return new MenuLateral().aguardarAbertura();
     }
 
+    @Step("Abrir as opções de ordenação")
     public PainelOrdenacao abrirOrdenacao() {
         clicar(BOTAO_ORDENAR);
         return new PainelOrdenacao().aguardarAbertura();
     }
 
+    @Step("Buscar pelo termo \"{termo}\"")
     public TelaListaTarefas buscar(String termo) {
         clicar(BOTAO_BUSCAR);
         digitar(CAMPO_BUSCA, termo);
@@ -135,6 +144,7 @@ public class TelaListaTarefas extends BasePage {
         return this;
     }
 
+    @Step("Fechar a busca")
     public TelaListaTarefas fecharBusca() {
         // Usa o botão da barra: a tecla "voltar" pode fechar o aplicativo
         clicar(BOTAO_RECOLHER_BUSCA);
