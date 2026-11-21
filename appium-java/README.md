@@ -36,7 +36,8 @@ conclusão, exclusão, busca, ordenação e tarefas atrasadas.
 | Selenium | 4.53.0 | Base do Appium Java Client (esperas, localizadores) |
 | JUnit | 6.1.3 | Execução dos testes |
 | AssertJ | 3.27.7 | Validações fluentes e com mensagens claras |
-| Allure Report | 3.1.1 | Relatório com os passos e screenshots de cada teste |
+| Allure (Java) | 3.1.1 | Registro dos passos, anexos e resultado de cada teste |
+| Allure Report | 2.30.0 | Relatório HTML com gráficos, ambiente da execução, passos e screenshots |
 | Datafaker | 2.7.0 | Geração de dados aleatórios |
 | Logback | 1.6.8 | Log da execução no terminal |
 | Maven | 3.9+ | Build, dependências e execução pela linha de comando |
@@ -72,6 +73,7 @@ qa-mobile-automation-framework/
             │   ├── base/TesteBase.java           # Prepara a tela inicial e registra as etapas
             │   ├── base/ExtensaoAppium.java      # Abre/fecha a sessão e anexa evidências
             │   ├── base/Evidencias.java          # Screenshot e hierarquia da tela no Allure
+            │   ├── base/AllureAmbiente.java      # Ambiente da execução na visão geral do Allure
             │   └── testes/                       # Classes de teste
             └── resources
                 ├── config.properties             # Configuração padrão (versionada)
@@ -234,6 +236,9 @@ Não é preciso instalar o Allure: o plugin do Maven baixa a ferramenta na prime
 
 O relatório mostra:
 
+- a visão geral da execução, com os gráficos de resultado, severidade e duração e o ambiente
+  (aparelho, versão do Android, aplicativo e servidor Appium);
+- os testes agrupados por suíte e por funcionalidade, além da linha do tempo da execução;
 - cada fluxo com suas etapas numeradas, em ordem;
 - o screenshot da tela ao final de cada etapa;
 - em caso de falha, o screenshot e a hierarquia da tela (XML) no momento do erro;

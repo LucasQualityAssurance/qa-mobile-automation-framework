@@ -10,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
  * Extensão JUnit que:
  * <ul>
  *   <li>inicia uma única sessão Appium para toda a suíte e a encerra ao final;</li>
+ *   <li>registra o ambiente da execução na visão geral do relatório Allure;</li>
  *   <li>anexa evidências (screenshot e page source) ao relatório Allure.</li>
  * </ul>
  */
@@ -43,6 +44,7 @@ public class ExtensaoAppium implements BeforeAllCallback, AfterTestExecutionCall
 
         private SessaoAppium() {
             GerenciadorDriver.iniciarSessao();
+            AllureAmbiente.registrar(GerenciadorDriver.obterDriver());
         }
 
         @Override
