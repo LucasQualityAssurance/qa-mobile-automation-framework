@@ -36,6 +36,7 @@
         <maven-enforcer-plugin.version>3.7.0</maven-enforcer-plugin.version>
         <maven-compiler-plugin.version>3.16.0</maven-compiler-plugin.version>
         <maven-resources-plugin.version>3.5.0</maven-resources-plugin.version>
+        <maven-clean-plugin.version>3.5.0</maven-clean-plugin.version>
         <maven-surefire-plugin.version>3.6.1</maven-surefire-plugin.version>
         <allure-maven.version>2.15.2</allure-maven.version>
         <!-- Relatório clássico do Allure 2: visão geral com gráficos, ambiente, suítes, funcionalidades e linha do tempo -->
@@ -45,6 +46,8 @@
         <groups/>
         <excludedGroups/>
         <allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
+        <!-- true mantém os resultados das execuções anteriores (-Dallure.manter.resultados=true) -->
+        <allure.manter.resultados>false</allure.manter.resultados>
     </properties>
 
     <dependencyManagement>
@@ -184,6 +187,37 @@
                                 </requireMavenVersion>
                                 <banDuplicatePomDependencyVersions/>
                             </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Remove resultados, evidências e relatório da execução anterior antes de cada nova execução -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>${maven-clean-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>limpar-resultados-allure</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${allure.manter.resultados}</skip>
+                            <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                            <filesets>
+                                <fileset>
+                                    <directory>${allure.results.directory}</directory>
+                                </fileset>
+                                <fileset>
+                                    <directory>${project.build.directory}/site/allure-maven-plugin</directory>
+                                </fileset>
+                                <fileset>
+                                    <directory>${project.build.directory}/allure-report</directory>
+                                </fileset>
+                            </filesets>
                         </configuration>
                     </execution>
                 </executions>

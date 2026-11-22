@@ -234,6 +234,14 @@ mvn allure:serve     # gera o relatório e abre no navegador
 
 Não é preciso instalar o Allure: o plugin do Maven baixa a ferramenta na primeira vez.
 
+A cada execução, os resultados, as evidências e o relatório da execução anterior são apagados
+automaticamente, para o relatório mostrar só a execução atual e a pasta `target` não crescer.
+Para acumular várias execuções no mesmo relatório:
+
+```bash
+mvn test -Dallure.manter.resultados=true
+```
+
 O relatório mostra:
 
 - a visão geral da execução, com os gráficos de resultado, severidade e duração e o ambiente
