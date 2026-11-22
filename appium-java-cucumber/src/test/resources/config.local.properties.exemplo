@@ -1,0 +1,19 @@
+# =====================================================================
+# Dados do aparelho usado na execução local.
+#
+# 1. Copie este arquivo para "config.local.properties" (mesma pasta).
+# 2. Preencha com os dados do seu aparelho.
+#
+# O config.local.properties é ignorado pelo Git: os dados do seu
+# aparelho nunca vão para o repositório. Todas as chaves são opcionais;
+# com um único aparelho conectado o Appium o encontra automaticamente.
+# =====================================================================
+
+# Identificador exibido pelo comando "adb devices"
+dispositivo.udid=
+
+# Modelo do aparelho (ex.: Pixel 7)
+dispositivo.nome=
+
+# Versão do Android (ex.: 14)
+dispositivo.versao=
