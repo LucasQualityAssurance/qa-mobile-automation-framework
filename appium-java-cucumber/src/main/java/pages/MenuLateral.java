@@ -38,7 +38,7 @@ public class MenuLateral extends BasePage {
     /** Item dentro do menu, sem confundir com textos iguais da tela por trás (ex.: título da lista). */
     private static By itemDoMenu(String texto) {
         return AppiumBy.androidUIAutomator("new UiSelector().resourceId(\"navigation_drawer\")"
-                + ".childSelector(new UiSelector().text(\"" + texto + "\"))");
+                + ".childSelector(new UiSelector().text(" + literalUiSelector(texto) + "))");
     }
 
     /** O menu abre com animação: aguarda o primeiro item parar de se mover antes de interagir. */

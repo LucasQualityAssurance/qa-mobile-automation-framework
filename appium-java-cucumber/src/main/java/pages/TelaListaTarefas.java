@@ -1,10 +1,12 @@
 package pages;
 
+import config.Configuracao;
 import io.appium.java_client.AppiumBy;
 import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,7 +14,7 @@ import java.util.Optional;
  * Tela principal do aplicativo: a lista de tarefas.
  * <p>
  * <b>Quando aparece:</b> ao abrir o app, ao salvar ou excluir uma tarefa e ao escolher um filtro
- * ou lista no menu lateral. É a tela em que todo teste começa ({@code TesteBase} garante isso).
+ * ou lista no menu lateral. É a tela em que todo cenário começa (o hook {@code @Before} garante isso).
  * <p>
  * <b>O que tem na tela:</b>
  * <ul>
@@ -92,6 +94,42 @@ public class TelaListaTarefas extends BasePage {
     /** Espera a tarefa sair da lista, por exemplo depois de concluída com as concluídas ocultas. */
     public void aguardarTarefaSumir(String titulo) {
         esperarDesaparecer(tituloDaTarefa(titulo));
+    }
+
+    /**
+     * {@code true} quando a tarefa não aparece na lista dentro do tempo padrão. Aguarda a saída
+     * da tarefa em vez de olhar só o instante atual, o que evita aprovar a validação antes de a
+     * lista ser atualizada.
+     */
+    public boolean naoExibeTarefa(String titulo) {
+        return estaAusente(tituloDaTarefa(titulo));
+    }
+
+    /** {@code true} quando o cabeçalho do grupo (ex.: "Concluída") está na tela. */
+    public boolean exibeGrupo(String grupo) {
+        return estaVisivel(cabecalhoDoGrupo(grupo));
+    }
+
+    /**
+     * Espera a tarefa aparecer sob o cabeçalho do grupo informado. Se o grupo estiver recolhido
+     * (a tarefa não aparece em lugar nenhum, mas o cabeçalho sim), expande o grupo antes.
+     * <p>
+     * Não falha: depois de chamar, confira o resultado com {@link #obterGrupoDaTarefa(String)}.
+     */
+    @Step("Localizar a tarefa \"{titulo}\" no grupo \"{grupo}\"")
+    public TelaListaTarefas localizarTarefaNoGrupo(String titulo, String grupo) {
+        if (estaNoGrupo(titulo, grupo, Configuracao.esperaCurta())) {
+            return this;
+        }
+        if (exibeGrupo(grupo) && obterGrupoDaTarefa(titulo).isEmpty()) {
+            expandirGrupo(grupo);
+        }
+        estaNoGrupo(titulo, grupo, Configuracao.esperaPadrao());
+        return this;
+    }
+
+    private boolean estaNoGrupo(String titulo, String grupo, Duration tempo) {
+        return aguardarCondicao(() -> obterGrupoDaTarefa(titulo).filter(grupo::equals).isPresent(), tempo);
     }
 
     /**

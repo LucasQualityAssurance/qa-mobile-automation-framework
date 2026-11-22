@@ -15,6 +15,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 
 /**
  * Classe base de todos os Page Objects: concentra as esperas explícitas e as ações comuns.
@@ -49,12 +50,20 @@ public abstract class BasePage {
 
     /** Elemento cujo texto é exatamente igual ao informado (ex.: um botão "Salvar"). */
     protected static By porTexto(String texto) {
-        return AppiumBy.androidUIAutomator("new UiSelector().text(\"" + texto + "\")");
+        return AppiumBy.androidUIAutomator("new UiSelector().text(" + literalUiSelector(texto) + ")");
     }
 
     /** Elemento cujo texto contém o trecho informado. */
     protected static By porTextoContendo(String trecho) {
-        return AppiumBy.androidUIAutomator("new UiSelector().textContains(\"" + trecho + "\")");
+        return AppiumBy.androidUIAutomator("new UiSelector().textContains(" + literalUiSelector(trecho) + ")");
+    }
+
+    /**
+     * Monta um literal de texto seguro para expressões {@code UiSelector}, escapando barras e aspas.
+     * Sem o escape, um texto com aspas quebraria o localizador.
+     */
+    protected static String literalUiSelector(String texto) {
+        return "\"" + texto.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
     }
 
     /** Elemento pela descrição de acessibilidade ({@code content-desc}), comum em botões só com ícone. */
@@ -120,6 +129,36 @@ public abstract class BasePage {
         }
     }
 
+    /**
+     * Verifica se o elemento sai da tela (ou nunca aparece) dentro do tempo padrão.
+     * Não falha: devolve {@code false} quando o elemento continua visível. Use nas validações
+     * de ausência, que precisam aguardar animações e atualizações da lista.
+     */
+    protected boolean estaAusente(By localizador) {
+        try {
+            esperarDesaparecer(localizador);
+            return true;
+        } catch (TimeoutException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Aguarda uma condição qualquer se tornar verdadeira, repetindo a verificação até o tempo
+     * informado. Não falha: devolve {@code false} quando o tempo acaba.
+     */
+    protected boolean aguardarCondicao(BooleanSupplier condicao, Duration tempo) {
+        try {
+            new WebDriverWait(driver, tempo)
+                    .ignoring(StaleElementReferenceException.class)
+                    .ignoring(NoSuchElementException.class)
+                    .until(d -> condicao.getAsBoolean());
+            return true;
+        } catch (TimeoutException e) {
+            return false;
+        }
+    }
+
     /** Busca imediata (sem espera) de todos os elementos que atendem ao localizador. */
     protected List<WebElement> buscarTodos(By localizador) {
         return driver.findElements(localizador);
@@ -161,6 +200,6 @@ public abstract class BasePage {
     protected WebElement rolarAteTexto(String texto) {
         return esperarVisivel(AppiumBy.androidUIAutomator(
                 "new UiScrollable(new UiSelector().scrollable(true))"
-                        + ".scrollIntoView(new UiSelector().text(\"" + texto + "\"))"));
+                        + ".scrollIntoView(new UiSelector().text(" + literalUiSelector(texto) + "))"));
     }
 }

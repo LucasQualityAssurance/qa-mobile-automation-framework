@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -18,9 +19,10 @@ import java.util.Map;
  * <p>
  * Quem chama cada método:
  * <ul>
- *   <li>{@link #iniciarSessao()} e {@link #encerrarSessao()}: a {@code ExtensaoAppium}, no início e
- *       no fim da execução;</li>
- *   <li>{@link #garantirAplicativoEmPrimeiroPlano()}: o {@code TesteBase}, antes de cada teste;</li>
+ *   <li>{@link #iniciarSessao()} e {@link #encerrarSessao()}: os hooks {@code @BeforeAll} e
+ *       {@code @AfterAll} da classe {@code Ganchos}, no início e no fim da execução;</li>
+ *   <li>{@link #garantirAplicativoEmPrimeiroPlano()}: o hook {@code @Before} da classe
+ *       {@code Ganchos}, antes de cada cenário;</li>
  *   <li>{@link #obterDriver()}: os Page Objects, para interagir com a tela.</li>
  * </ul>
  * Pré-requisitos para a sessão abrir: servidor Appium rodando no endereço de {@code appium.url},
@@ -115,7 +117,16 @@ public final class GerenciadorDriver {
     }
 
     /**
-     * Monta as capabilities: as instruções enviadas ao Appium dizendo qual aparelho usar, qual
+     * Data atual segundo o relógio do aparelho. Use em vez de {@code LocalDate.now()} sempre que a
+     * data for comparada com o que o app exibe ("Hoje", "Atrasado"...), pois o computador e o
+     * aparelho podem estar em fusos ou datas diferentes.
+     */
+    public static LocalDate dataDoAparelho() {
+        return LocalDate.parse(obterDriver().getDeviceTime("YYYY-MM-DD"));
+    }
+
+    /**
+     * Monta as capabilities:as instruções enviadas ao Appium dizendo qual aparelho usar, qual
      * aplicativo abrir e como se comportar. Cada valor vem de uma chave do {@code config.properties}.
      */
     private static UiAutomator2Options criarCapabilities() {

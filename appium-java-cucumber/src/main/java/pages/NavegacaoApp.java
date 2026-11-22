@@ -8,10 +8,11 @@ import java.time.Duration;
 
 /**
  * Leva o aplicativo, a partir de qualquer tela, até a lista "Minhas tarefas"
- * sem reiniciá-lo. Usado entre os testes para manter o app sempre aberto.
+ * sem reiniciá-lo. Usado entre os cenários para manter o app sempre aberto.
  * <p>
- * Não representa uma tela. É chamada pelo {@code TesteBase} antes de cada teste, para que todos
- * comecem do mesmo ponto mesmo que o teste anterior tenha falhado no meio de um fluxo, por exemplo
+ * Não representa uma tela. É chamada pelos hooks da classe {@code Ganchos} antes de cada cenário
+ * e na limpeza da massa, para que todos comecem do mesmo ponto mesmo que o cenário anterior tenha
+ * falhado no meio de um fluxo, por exemplo
  * com a tela de edição, a busca ou o menu ainda abertos.
  * <p>
  * A cada tentativa, identifica onde o app está e dá um passo em direção à lista:

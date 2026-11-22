@@ -1,5 +1,6 @@
 package pages;
 
+import driver.GerenciadorDriver;
 import io.appium.java_client.AppiumBy;
 import io.qameta.allure.Step;
 import org.openqa.selenium.By;
@@ -65,11 +66,12 @@ public class SeletorData extends BasePage {
     }
 
     /**
-     * O calendário sempre abre no mês atual: calcula quantos meses avançar ou voltar,
-     * toca nas setas e confirma pelo título do mês.
+     * O calendário sempre abre no mês atual do aparelho: calcula quantos meses avançar ou voltar,
+     * toca nas setas e confirma pelo título do mês. O mês atual vem do relógio do aparelho, e não
+     * do computador, para não errar quando os fusos ou as datas forem diferentes.
      */
     private void navegarAteMes(YearMonth destino) {
-        YearMonth atual = YearMonth.now();
+        YearMonth atual = YearMonth.from(GerenciadorDriver.dataDoAparelho());
         int diferenca = (destino.getYear() - atual.getYear()) * 12 + destino.getMonthValue() - atual.getMonthValue();
         if (Math.abs(diferenca) > LIMITE_NAVEGACAO_MESES) {
             throw new IllegalArgumentException("Data muito distante para navegar no calendário: " + destino);
