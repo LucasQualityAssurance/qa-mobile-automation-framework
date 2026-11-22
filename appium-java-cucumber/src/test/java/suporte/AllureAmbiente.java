@@ -1,4 +1,4 @@
-package base;
+package suporte;
 
 import config.Configuracao;
 import io.appium.java_client.android.AndroidDriver;
@@ -14,13 +14,13 @@ import java.util.Properties;
 
 /**
  * Grava o arquivo {@code environment.properties} lido pelo Allure, para que a visão geral do
- * relatório mostre onde e como os testes rodaram (aparelho, versão do Android, aplicativo,
+ * relatório mostre onde e como os cenários rodaram (aparelho, versão do Android, aplicativo,
  * servidor Appium, versão do Java).
  * <p>
  * Os dados do aparelho são lidos da sessão Appium já iniciada, e não do arquivo de configuração,
  * então aparecem mesmo quando o aparelho foi encontrado automaticamente.
  */
-final class AllureAmbiente {
+public final class AllureAmbiente {
 
     private static final Logger LOG = LoggerFactory.getLogger(AllureAmbiente.class);
     private static final String NAO_INFORMADO = "não informado";
@@ -28,7 +28,7 @@ final class AllureAmbiente {
     private AllureAmbiente() {
     }
 
-    static void registrar(AndroidDriver driver) {
+    public static void registrar(AndroidDriver driver) {
         Capabilities sessao = driver.getCapabilities();
         String fabricante = capability(sessao, "deviceManufacturer");
         String modelo = capability(sessao, "deviceModel");
@@ -50,7 +50,7 @@ final class AllureAmbiente {
                 ambiente.store(saida, null);
             }
         } catch (IOException e) {
-            // O ambiente é só informativo: a falha ao gravá-lo não deve interromper a suíte.
+            // O ambiente é só informativo: a falha ao gravá-lo não deve interromper a execução.
             LOG.warn("Não foi possível gravar o ambiente do Allure: {}", e.getMessage());
         }
     }
