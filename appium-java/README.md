@@ -249,7 +249,8 @@ O relatório mostra:
 - os testes agrupados por suíte e por funcionalidade, além da linha do tempo da execução;
 - cada fluxo com suas etapas numeradas, em ordem;
 - o screenshot da tela ao final de cada etapa;
-- em caso de falha, o screenshot e a hierarquia da tela (XML) no momento do erro;
+- em caso de falha, o screenshot e a hierarquia da tela (XML) no momento do erro, inclusive
+  quando a falha acontece na preparação (`@BeforeEach`) ou na finalização (`@AfterEach`) do teste;
 - a descrição do fluxo, a funcionalidade (`@Feature`) e a severidade de cada teste.
 
 ## Estado do aplicativo entre os testes

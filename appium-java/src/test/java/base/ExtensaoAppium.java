@@ -5,6 +5,7 @@ import driver.GerenciadorDriver;
 import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.LifecycleMethodExecutionExceptionHandler;
 
 /**
  * Extensão JUnit que:
@@ -14,7 +15,8 @@ import org.junit.jupiter.api.extension.ExtensionContext;
  *   <li>anexa evidências (screenshot e page source) ao relatório Allure.</li>
  * </ul>
  */
-public class ExtensaoAppium implements BeforeAllCallback, AfterTestExecutionCallback {
+public class ExtensaoAppium implements BeforeAllCallback, AfterTestExecutionCallback,
+        LifecycleMethodExecutionExceptionHandler {
 
     private static final ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace.create(ExtensaoAppium.class);
 
@@ -32,11 +34,32 @@ public class ExtensaoAppium implements BeforeAllCallback, AfterTestExecutionCall
         }
         boolean falhou = contexto.getExecutionException().isPresent();
         if (falhou) {
-            Evidencias.anexarScreenshot("Tela no momento da falha");
-            Evidencias.anexarPageSource("Hierarquia da tela no momento da falha");
+            anexarEvidenciasDaFalha();
         } else if (Configuracao.obterBooleano("evidencia.sempre")) {
             Evidencias.anexarScreenshot("Tela ao final do teste");
         }
+    }
+
+    /** Falhas na preparação (@BeforeEach) não passam pelo afterTestExecution: anexa as evidências aqui. */
+    @Override
+    public void handleBeforeEachMethodExecutionException(ExtensionContext contexto, Throwable erro) throws Throwable {
+        if (GerenciadorDriver.sessaoAtiva()) {
+            anexarEvidenciasDaFalha();
+        }
+        throw erro;
+    }
+
+    @Override
+    public void handleAfterEachMethodExecutionException(ExtensionContext contexto, Throwable erro) throws Throwable {
+        if (GerenciadorDriver.sessaoAtiva()) {
+            anexarEvidenciasDaFalha();
+        }
+        throw erro;
+    }
+
+    private static void anexarEvidenciasDaFalha() {
+        Evidencias.anexarScreenshot("Tela no momento da falha");
+        Evidencias.anexarPageSource("Hierarquia da tela no momento da falha");
     }
 
     /** Recurso que mantém a sessão viva durante a suíte. */
