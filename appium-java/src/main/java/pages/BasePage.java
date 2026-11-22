@@ -17,11 +17,21 @@ import java.time.Duration;
 import java.util.List;
 
 /**
- * Classe base dos Page Objects: concentra esperas explícitas e ações comuns.
- * Nenhuma pausa fixa é utilizada; toda sincronização é feita por condição.
+ * Classe base de todos os Page Objects: concentra as esperas explícitas e as ações comuns.
+ * <p>
+ * Regras que valem para o projeto inteiro:
+ * <ul>
+ *   <li>Nenhuma pausa fixa ({@code Thread.sleep}) é usada. Toda sincronização espera uma
+ *       condição: elemento visível, clicável, desaparecido ou parado.</li>
+ *   <li>A espera implícita do driver é zero (ver {@code GerenciadorDriver}). Por isso toda busca
+ *       deve passar pelos métodos de espera desta classe.</li>
+ *   <li>O tempo máximo de espera vem de {@code tempo.espera.padrao} no {@code config.properties}.</li>
+ * </ul>
+ * Ao criar uma nova tela, estenda esta classe e use apenas os métodos {@code protected} abaixo.
  */
 public abstract class BasePage {
 
+    /** Intervalo entre as leituras de posição usadas para detectar o fim de uma animação. */
     private static final Duration INTERVALO_ESTABILIDADE = Duration.ofMillis(250);
 
     protected final AndroidDriver driver;
@@ -30,33 +40,41 @@ public abstract class BasePage {
     protected BasePage() {
         this.driver = GerenciadorDriver.obterDriver();
         this.espera = new WebDriverWait(driver, Configuracao.esperaPadrao());
+        // Listas do Android são redesenhadas com frequência: um elemento encontrado pode ficar
+        // "velho" (stale) logo em seguida. Nesse caso a espera simplesmente tenta de novo.
         this.espera.ignoring(StaleElementReferenceException.class);
     }
 
     // ---------- Localizadores utilitários ----------
 
+    /** Elemento cujo texto é exatamente igual ao informado (ex.: um botão "Salvar"). */
     protected static By porTexto(String texto) {
         return AppiumBy.androidUIAutomator("new UiSelector().text(\"" + texto + "\")");
     }
 
+    /** Elemento cujo texto contém o trecho informado. */
     protected static By porTextoContendo(String trecho) {
         return AppiumBy.androidUIAutomator("new UiSelector().textContains(\"" + trecho + "\")");
     }
 
+    /** Elemento pela descrição de acessibilidade ({@code content-desc}), comum em botões só com ícone. */
     protected static By porDescricao(String descricao) {
         return AppiumBy.accessibilityId(descricao);
     }
 
     // ---------- Esperas ----------
 
+    /** Espera o elemento aparecer na tela e o devolve. Falha após o tempo padrão. */
     protected WebElement esperarVisivel(By localizador) {
         return espera.until(ExpectedConditions.visibilityOfElementLocated(localizador));
     }
 
+    /** Espera o elemento estar visível e habilitado para receber toque. */
     protected WebElement esperarClicavel(By localizador) {
         return espera.until(ExpectedConditions.elementToBeClickable(localizador));
     }
 
+    /** Espera o elemento sair da tela (ex.: um diálogo que foi fechado). */
     protected void esperarDesaparecer(By localizador) {
         espera.until(ExpectedConditions.invisibilityOfElementLocated(localizador));
     }
@@ -64,6 +82,9 @@ public abstract class BasePage {
     /**
      * Aguarda o elemento parar de se mover (fim de animações de abertura), comparando
      * a posição dele entre duas leituras consecutivas.
+     * <p>
+     * Use antes de tocar em itens de painéis que deslizam, como o menu lateral: tocar durante a
+     * animação faz o toque cair em outro item.
      */
     protected WebElement esperarPosicaoEstavel(By localizador) {
         Rectangle[] anterior = new Rectangle[1];
@@ -79,10 +100,15 @@ public abstract class BasePage {
                 });
     }
 
+    /**
+     * Verifica se o elemento aparece dentro do tempo curto ({@code tempo.espera.curta}).
+     * Não falha: devolve {@code false} quando o elemento não aparece. Use em consultas e decisões.
+     */
     protected boolean estaVisivel(By localizador) {
         return estaVisivel(localizador, Configuracao.esperaCurta());
     }
 
+    /** Igual ao {@link #estaVisivel(By)}, com tempo de espera informado. */
     protected boolean estaVisivel(By localizador, Duration tempo) {
         try {
             new WebDriverWait(driver, tempo)
@@ -94,26 +120,31 @@ public abstract class BasePage {
         }
     }
 
+    /** Busca imediata (sem espera) de todos os elementos que atendem ao localizador. */
     protected List<WebElement> buscarTodos(By localizador) {
         return driver.findElements(localizador);
     }
 
     // ---------- Ações ----------
 
+    /** Espera o elemento ficar clicável e toca nele. */
     protected void clicar(By localizador) {
         esperarClicavel(localizador).click();
     }
 
+    /** Limpa o campo e digita o texto informado. */
     protected void digitar(By localizador, String texto) {
         WebElement campo = esperarVisivel(localizador);
         campo.clear();
         campo.sendKeys(texto);
     }
 
+    /** Espera o elemento aparecer e devolve o texto dele. */
     protected String obterTexto(By localizador) {
         return esperarVisivel(localizador).getText();
     }
 
+    /** Fecha o teclado virtual quando ele está aberto, para não cobrir botões da tela. */
     protected void esconderTeclado() {
         if (driver.isKeyboardShown()) {
             driver.hideKeyboard();

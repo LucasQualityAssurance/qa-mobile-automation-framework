@@ -19,6 +19,9 @@ import java.util.Properties;
  *   <li>{@code config.local.properties}: dados do aparelho de cada pessoa, ignorado pelo Git;</li>
  *   <li>{@code config.properties}: valores padrão versionados no repositório.</li>
  * </ol>
+ * Os arquivos ficam em {@code src/test/resources} e são lidos uma única vez, quando a classe
+ * é usada pela primeira vez. Para criar uma configuração nova, adicione a chave no
+ * {@code config.properties} e leia com {@link #obter(String)} ou um dos métodos tipados.
  */
 public final class Configuracao {
 
@@ -29,6 +32,7 @@ public final class Configuracao {
     private Configuracao() {
     }
 
+    /** Carrega o arquivo padrão (obrigatório) e, por cima dele, o local (opcional). */
     private static Properties carregar() {
         Properties propriedades = new Properties();
         if (!carregarArquivo(ARQUIVO_PADRAO, propriedades)) {
@@ -62,14 +66,19 @@ public final class Configuracao {
                 .orElseThrow(() -> new IllegalStateException("Configuração obrigatória ausente: " + chave));
     }
 
+    /** Chave obrigatória com valor {@code true} ou {@code false}. */
     public static boolean obterBooleano(String chave) {
         return Boolean.parseBoolean(obter(chave));
     }
 
+    /** Chave obrigatória com um número de segundos, devolvido como {@link Duration}. */
     public static Duration obterSegundos(String chave) {
         return Duration.ofSeconds(Long.parseLong(obter(chave)));
     }
 
+    // ---------- Atalhos para as chaves mais usadas ----------
+
+    /** Endereço do servidor Appium ({@code appium.url}), por padrão http://127.0.0.1:4723. */
     public static URL urlAppium() {
         try {
             return URI.create(obter("appium.url")).toURL();
@@ -78,14 +87,17 @@ public final class Configuracao {
         }
     }
 
+    /** Pacote do aplicativo testado ({@code app.pacote}), ex.: org.tasks. */
     public static String pacoteApp() {
         return obter("app.pacote");
     }
 
+    /** Tempo máximo para esperar um elemento antes de falhar ({@code tempo.espera.padrao}). */
     public static Duration esperaPadrao() {
         return obterSegundos("tempo.espera.padrao");
     }
 
+    /** Tempo usado nas verificações que não devem falhar, como "está visível?" ({@code tempo.espera.curta}). */
     public static Duration esperaCurta() {
         return obterSegundos("tempo.espera.curta");
     }

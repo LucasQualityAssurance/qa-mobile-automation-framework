@@ -15,15 +15,27 @@ import java.util.Map;
  * Responsável pelo ciclo de vida da sessão Appium.
  * Uma única sessão é reaproveitada durante a suíte e o aplicativo permanece
  * aberto entre os testes.
+ * <p>
+ * Quem chama cada método:
+ * <ul>
+ *   <li>{@link #iniciarSessao()} e {@link #encerrarSessao()}: a {@code ExtensaoAppium}, no início e
+ *       no fim da execução;</li>
+ *   <li>{@link #garantirAplicativoEmPrimeiroPlano()}: o {@code TesteBase}, antes de cada teste;</li>
+ *   <li>{@link #obterDriver()}: os Page Objects, para interagir com a tela.</li>
+ * </ul>
+ * Pré-requisitos para a sessão abrir: servidor Appium rodando no endereço de {@code appium.url},
+ * aparelho conectado (aparece em {@code adb devices}) e o Tasks.org instalado nele.
  */
 public final class GerenciadorDriver {
 
     private static final Logger LOG = LoggerFactory.getLogger(GerenciadorDriver.class);
+    /** Guarda o driver por thread. Hoje a execução é sequencial, mas isso evita mistura em paralelo. */
     private static final ThreadLocal<AndroidDriver> DRIVER = new ThreadLocal<>();
 
     private GerenciadorDriver() {
     }
 
+    /** Driver da sessão atual. Falha com mensagem clara se a sessão ainda não foi aberta. */
     public static AndroidDriver obterDriver() {
         AndroidDriver driver = DRIVER.get();
         if (driver == null) {
@@ -36,6 +48,10 @@ public final class GerenciadorDriver {
         return DRIVER.get() != null;
     }
 
+    /**
+     * Abre a sessão Appium com as capabilities do arquivo de configuração e prepara o app.
+     * Chamadas repetidas não abrem uma segunda sessão.
+     */
     public static void iniciarSessao() {
         if (sessaoAtiva()) {
             return;
@@ -45,11 +61,13 @@ public final class GerenciadorDriver {
         // Os testTags do Jetpack Compose não possuem o prefixo "org.tasks:id/".
         // Sem esta configuração, By.id("save_task") seria convertido para "org.tasks:id/save_task".
         driver.setSetting("disableIdLocatorAutocompletion", true);
+        // Espera implícita desligada: as esperas são sempre explícitas, nos métodos da BasePage.
         driver.manage().timeouts().implicitlyWait(Duration.ZERO);
         DRIVER.set(driver);
         prepararAplicativoParaSuite(driver);
     }
 
+    /** Fecha a sessão Appium. O app continua instalado e com os dados no aparelho. */
     public static void encerrarSessao() {
         AndroidDriver driver = DRIVER.get();
         if (driver != null) {
@@ -96,6 +114,10 @@ public final class GerenciadorDriver {
         }
     }
 
+    /**
+     * Monta as capabilities: as instruções enviadas ao Appium dizendo qual aparelho usar, qual
+     * aplicativo abrir e como se comportar. Cada valor vem de uma chave do {@code config.properties}.
+     */
     private static UiAutomator2Options criarCapabilities() {
         UiAutomator2Options opcoes = new UiAutomator2Options()
                 .setPlatformName(Configuracao.obter("plataforma.nome"))

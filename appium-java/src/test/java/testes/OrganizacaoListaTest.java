@@ -18,10 +18,22 @@ import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Recursos de organização da lista: busca, ordenação e agrupamento por vencimento.
+ * <p>
+ * Telas percorridas: lista de tarefas (busca) → painel de ordenação → edição de tarefa
+ * (prioridade e seletor de data).
+ * <p>
+ * A massa foi escolhida para que cada ordenação dê um resultado diferente e previsível:
+ * duas tarefas começam com "Revisar" (para a busca) e cada uma tem uma prioridade distinta.
+ * As validações de ordem consideram apenas as tarefas deste teste, ignorando outras que
+ * existam no aparelho.
+ */
 @Feature("Organização da lista")
 @DisplayName("Organização da lista")
 class OrganizacaoListaTest extends TesteBase {
 
+    // Prioridades: REVISAR_PR baixa, APLICAR_PATCH alta, REVISAR_DOC média; CERTIFICADO vence ontem.
     private static final String REVISAR_PR = "Revisar pull request da API";
     private static final String APLICAR_PATCH = "Aplicar patch de segurança";
     private static final String REVISAR_DOC = "Revisar documentação técnica";

@@ -10,7 +10,13 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 
-/** Coleta de evidências anexadas ao relatório Allure. */
+/**
+ * Coleta de evidências anexadas ao relatório Allure.
+ * <p>
+ * Os anexos são gravados em {@code target/allure-results} junto com os resultados, e essa pasta
+ * é apagada no início de cada {@code mvn test}. Uma falha ao capturar a evidência apenas gera um
+ * aviso no log: ela nunca derruba o teste.
+ */
 public final class Evidencias {
 
     private static final Logger LOG = LoggerFactory.getLogger(Evidencias.class);
@@ -18,6 +24,7 @@ public final class Evidencias {
     private Evidencias() {
     }
 
+    /** Anexa uma imagem da tela atual do aparelho, com o nome informado. */
     public static void anexarScreenshot(String nome) {
         try {
             byte[] imagem = GerenciadorDriver.obterDriver().getScreenshotAs(OutputType.BYTES);
@@ -27,6 +34,10 @@ public final class Evidencias {
         }
     }
 
+    /**
+     * Anexa a hierarquia da tela (XML com todos os elementos, ids e textos). É a principal pista
+     * para descobrir por que um localizador não encontrou o elemento.
+     */
     public static void anexarPageSource(String nome) {
         try {
             String xml = GerenciadorDriver.obterDriver().getPageSource();

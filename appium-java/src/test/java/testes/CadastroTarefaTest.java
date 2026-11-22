@@ -13,6 +13,17 @@ import pages.TelaEdicaoTarefa;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Cadastro completo de uma tarefa, do formulário até a conferência em cada lugar onde ela deve
+ * aparecer.
+ * <p>
+ * Telas percorridas: lista de tarefas → menu lateral → nova lista → edição de tarefa (seletor de
+ * data e seletor de lista) → filtros "Hoje" e "Projetos de TI".
+ * <p>
+ * Marcado como {@code smoke}: roda também em {@code mvn test -Psmoke}. A lista "Projetos de TI"
+ * criada aqui não é excluída ao final, só a tarefa. Ela some na próxima execução, porque os
+ * dados do app são limpos no início de cada suíte.
+ */
 @Feature("Cadastro de tarefa")
 @DisplayName("Cadastro de tarefa")
 class CadastroTarefaTest extends TesteBase {

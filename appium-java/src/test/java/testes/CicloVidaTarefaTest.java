@@ -11,12 +11,25 @@ import pages.TelaEdicaoTarefa;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Tudo o que pode acontecer com uma tarefa depois de criada: edição, descarte de alterações,
+ * conclusão, reabertura e exclusão.
+ * <p>
+ * Telas percorridas: lista de tarefas → edição de tarefa (com o diálogo de descarte) →
+ * painel de ordenação ("Mostrar tarefas concluídas") → busca.
+ * <p>
+ * O título passa por três versões ({@code TITULO_ORIGINAL}, {@code TITULO_RASCUNHO} e
+ * {@code TITULO_FINAL}) para provar qual alteração foi gravada e qual foi descartada.
+ */
 @Feature("Ciclo de vida da tarefa")
 @DisplayName("Ciclo de vida da tarefa")
 class CicloVidaTarefaTest extends TesteBase {
 
+    /** Título com que a tarefa é criada. */
     private static final String TITULO_ORIGINAL = "Corrigir bug no login";
+    /** Alteração que será descartada: nunca deve chegar à lista. */
     private static final String TITULO_RASCUNHO = "Corrigir bug no login do app";
+    /** Alteração que será salva. */
     private static final String TITULO_FINAL = "Corrigir bug no login e publicar hotfix";
     private static final String GRUPO_CONCLUIDAS = "Concluída";
 
