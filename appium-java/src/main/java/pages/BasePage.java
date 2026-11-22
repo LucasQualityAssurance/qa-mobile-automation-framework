@@ -5,6 +5,8 @@ import driver.GerenciadorDriver;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.android.AndroidDriver;
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.Rectangle;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
@@ -19,6 +21,8 @@ import java.util.List;
  * Nenhuma pausa fixa é utilizada; toda sincronização é feita por condição.
  */
 public abstract class BasePage {
+
+    private static final Duration INTERVALO_ESTABILIDADE = Duration.ofMillis(250);
 
     protected final AndroidDriver driver;
     private final WebDriverWait espera;
@@ -55,6 +59,24 @@ public abstract class BasePage {
 
     protected void esperarDesaparecer(By localizador) {
         espera.until(ExpectedConditions.invisibilityOfElementLocated(localizador));
+    }
+
+    /**
+     * Aguarda o elemento parar de se mover (fim de animações de abertura), comparando
+     * a posição dele entre duas leituras consecutivas.
+     */
+    protected WebElement esperarPosicaoEstavel(By localizador) {
+        Rectangle[] anterior = new Rectangle[1];
+        return new WebDriverWait(driver, Configuracao.esperaPadrao(), INTERVALO_ESTABILIDADE)
+                .ignoring(StaleElementReferenceException.class)
+                .ignoring(NoSuchElementException.class)
+                .until(d -> {
+                    WebElement elemento = d.findElement(localizador);
+                    Rectangle atual = elemento.getRect();
+                    boolean estavel = atual.equals(anterior[0]);
+                    anterior[0] = atual;
+                    return estavel ? elemento : null;
+                });
     }
 
     protected boolean estaVisivel(By localizador) {

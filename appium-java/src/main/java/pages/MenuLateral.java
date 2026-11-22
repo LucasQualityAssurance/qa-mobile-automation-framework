@@ -9,9 +9,18 @@ public class MenuLateral extends BasePage {
 
     private static final By MENU = AppiumBy.id("navigation_drawer");
     private static final By CRIAR_NOVA_LISTA = porDescricao("Criar nova lista");
+    private static final By PRIMEIRO_ITEM = itemDoMenu("Minhas tarefas");
 
+    /** Item dentro do menu, sem confundir com textos iguais da tela por trás (ex.: título da lista). */
+    private static By itemDoMenu(String texto) {
+        return AppiumBy.androidUIAutomator("new UiSelector().resourceId(\"navigation_drawer\")"
+                + ".childSelector(new UiSelector().text(\"" + texto + "\"))");
+    }
+
+    /** O menu abre com animação: aguarda o primeiro item parar de se mover antes de interagir. */
     public MenuLateral aguardarAbertura() {
         esperarVisivel(MENU);
+        esperarPosicaoEstavel(PRIMEIRO_ITEM);
         return this;
     }
 
@@ -20,12 +29,12 @@ public class MenuLateral extends BasePage {
     }
 
     public boolean exibeOpcao(String opcao) {
-        return estaVisivel(porTexto(opcao));
+        return estaVisivel(itemDoMenu(opcao));
     }
 
     @Step("Selecionar \"{opcao}\" no menu lateral")
     public TelaListaTarefas selecionar(String opcao) {
-        clicar(porTexto(opcao));
+        esperarPosicaoEstavel(itemDoMenu(opcao)).click();
         return new TelaListaTarefas().aguardarCarregamento();
     }
 
