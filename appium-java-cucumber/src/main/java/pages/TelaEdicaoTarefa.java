@@ -124,6 +124,7 @@ public class TelaEdicaoTarefa extends BasePage {
     public TelaEdicaoTarefa definirPrioridade(Prioridade prioridade) {
         esconderTeclado();
         esperarVisivel(BOTOES_PRIORIDADE);
+        log.info("Tocar no botão da prioridade {} (posição {})", prioridade, prioridade.posicao());
         buscarTodos(BOTOES_PRIORIDADE).get(prioridade.posicao()).click();
         return this;
     }
@@ -142,6 +143,7 @@ public class TelaEdicaoTarefa extends BasePage {
     public TelaEdicaoTarefa adicionarSubtarefa(String titulo) {
         esconderTeclado();
         clicar(ADICIONAR_SUBTAREFA);
+        log.info("Digitar a subtarefa \"{}\"", titulo);
         esperarVisivel(CAMPO_SUBTAREFA_VAZIO).sendKeys(titulo);
         return this;
     }

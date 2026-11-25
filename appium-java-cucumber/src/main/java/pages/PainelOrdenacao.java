@@ -47,7 +47,10 @@ public class PainelOrdenacao extends BasePage {
     public PainelOrdenacao definirMostrarConcluidas(boolean exibir) {
         WebElement interruptor = esperarVisivel(INTERRUPTOR_MOSTRAR_CONCLUIDAS);
         if (Boolean.parseBoolean(interruptor.getAttribute("checked")) != exibir) {
+            log.info("Tocar no interruptor \"Mostrar tarefas concluídas\" (passa a {})", exibir);
             interruptor.click();
+        } else {
+            log.info("\"Mostrar tarefas concluídas\" já está como {}: nada a fazer", exibir);
         }
         return this;
     }

@@ -20,11 +20,19 @@ public class TelaBoasVindas extends BasePage {
 
     /** Botão "Continuar sem sincronizar" (testTag do Compose, por isso sem o prefixo org.tasks:id/). */
     private static final By CONTINUAR_SEM_SINCRONIZAR = AppiumBy.id("continue_without_sync");
+    /** Botão "+" da lista de tarefas: quando aparece, a tela de boas-vindas ficou para trás. */
+    private static final By BOTAO_NOVA_TAREFA = AppiumBy.id("org.tasks:id/fab");
 
-    /** Segue sem conta de sincronização e espera a lista de tarefas carregar. */
+    /**
+     * Segue sem conta de sincronização e espera a lista de tarefas carregar.
+     * <p>
+     * Esta tela abre logo após a limpeza dos dados do app, e um toque dado enquanto o app ainda
+     * termina de carregar pode não ter efeito. Por isso o toque é confirmado e, se preciso,
+     * repetido ({@link #clicarConfirmandoSaida}).
+     */
     @Step("Continuar sem sincronizar")
     public TelaListaTarefas continuarSemSincronizar() {
-        clicar(CONTINUAR_SEM_SINCRONIZAR);
+        clicarConfirmandoSaida(CONTINUAR_SEM_SINCRONIZAR, BOTAO_NOVA_TAREFA);
         return new TelaListaTarefas().aguardarCarregamento();
     }
 }

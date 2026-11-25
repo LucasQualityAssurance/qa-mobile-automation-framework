@@ -10,8 +10,11 @@ import org.openqa.selenium.Rectangle;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.List;
@@ -29,12 +32,18 @@ import java.util.function.BooleanSupplier;
  *   <li>O tempo máximo de espera vem de {@code tempo.espera.padrao} no {@code config.properties}.</li>
  * </ul>
  * Ao criar uma nova tela, estenda esta classe e use apenas os métodos {@code protected} abaixo.
+ * <p>
+ * <b>Logs:</b> toda ação (tocar, digitar, voltar, rolar) é registrada em INFO com o nome da tela,
+ * e toda espera em DEBUG com o localizador. O INFO aparece no terminal e no Allure; o DEBUG só no
+ * Allure ("Log da etapa"). Quando uma espera estoura o tempo, o localizador é registrado em WARN.
  */
 public abstract class BasePage {
 
     /** Intervalo entre as leituras de posição usadas para detectar o fim de uma animação. */
     private static final Duration INTERVALO_ESTABILIDADE = Duration.ofMillis(250);
 
+    /** Logger com o nome da tela concreta: aparece como [TelaListaTarefas], [MenuLateral]... */
+    protected final Logger log = LoggerFactory.getLogger(getClass());
     protected final AndroidDriver driver;
     private final WebDriverWait espera;
 
@@ -75,17 +84,38 @@ public abstract class BasePage {
 
     /** Espera o elemento aparecer na tela e o devolve. Falha após o tempo padrão. */
     protected WebElement esperarVisivel(By localizador) {
-        return espera.until(ExpectedConditions.visibilityOfElementLocated(localizador));
+        return aguardar("ficar visível", localizador, ExpectedConditions.visibilityOfElementLocated(localizador));
     }
 
     /** Espera o elemento estar visível e habilitado para receber toque. */
     protected WebElement esperarClicavel(By localizador) {
-        return espera.until(ExpectedConditions.elementToBeClickable(localizador));
+        return aguardar("ficar clicável", localizador, ExpectedConditions.elementToBeClickable(localizador));
     }
 
     /** Espera o elemento sair da tela (ex.: um diálogo que foi fechado). */
     protected void esperarDesaparecer(By localizador) {
-        espera.until(ExpectedConditions.invisibilityOfElementLocated(localizador));
+        aguardar("desaparecer", localizador, ExpectedConditions.invisibilityOfElementLocated(localizador));
+    }
+
+    /**
+     * Executa a espera padrão registrando no log o que está sendo aguardado. Se o tempo acabar,
+     * registra em WARN qual localizador falhou antes de propagar o erro.
+     */
+    private <T> T aguardar(String condicao, By localizador, ExpectedCondition<T> esperado) {
+        log.debug("Aguardando {}: {}", condicao, descrever(localizador));
+        try {
+            return espera.until(esperado);
+        } catch (TimeoutException e) {
+            log.warn("Tempo esgotado ({} s) aguardando {}: {}",
+                    Configuracao.esperaPadrao().toSeconds(), condicao, descrever(localizador));
+            throw e;
+        }
+    }
+
+    /** Texto legível do localizador para os logs, sem o prefixo "By.". */
+    protected static String descrever(By localizador) {
+        String texto = localizador.toString();
+        return texto.startsWith("By.") ? texto.substring(3) : texto;
     }
 
     /**
@@ -96,6 +126,7 @@ public abstract class BasePage {
      * animação faz o toque cair em outro item.
      */
     protected WebElement esperarPosicaoEstavel(By localizador) {
+        log.debug("Aguardando parar de se mover: {}", descrever(localizador));
         Rectangle[] anterior = new Rectangle[1];
         return new WebDriverWait(driver, Configuracao.esperaPadrao(), INTERVALO_ESTABILIDADE)
                 .ignoring(StaleElementReferenceException.class)
@@ -119,14 +150,17 @@ public abstract class BasePage {
 
     /** Igual ao {@link #estaVisivel(By)}, com tempo de espera informado. */
     protected boolean estaVisivel(By localizador, Duration tempo) {
+        boolean visivel;
         try {
             new WebDriverWait(driver, tempo)
                     .ignoring(StaleElementReferenceException.class)
                     .until(ExpectedConditions.visibilityOfElementLocated(localizador));
-            return true;
+            visivel = true;
         } catch (TimeoutException e) {
-            return false;
+            visivel = false;
         }
+        log.debug("Consulta \"está visível\" ({} s): {} -> {}", tempo.toSeconds(), descrever(localizador), visivel);
+        return visivel;
     }
 
     /**
@@ -137,10 +171,30 @@ public abstract class BasePage {
     protected boolean estaAusente(By localizador) {
         try {
             esperarDesaparecer(localizador);
+            log.debug("Consulta \"está ausente\": {} -> true", descrever(localizador));
             return true;
         } catch (TimeoutException e) {
+            log.debug("Consulta \"está ausente\": {} -> false", descrever(localizador));
             return false;
         }
+    }
+
+    /**
+     * Igual ao {@link #estaAusente(By)}, com tempo de espera informado e sem registrar WARN ao
+     * esgotar o tempo: use quando "ainda visível" é um resultado esperado que leva a outra ação.
+     */
+    protected boolean estaAusente(By localizador, Duration tempo) {
+        boolean ausente;
+        try {
+            new WebDriverWait(driver, tempo)
+                    .ignoring(StaleElementReferenceException.class)
+                    .until(ExpectedConditions.invisibilityOfElementLocated(localizador));
+            ausente = true;
+        } catch (TimeoutException e) {
+            ausente = false;
+        }
+        log.debug("Consulta \"está ausente\" ({} s): {} -> {}", tempo.toSeconds(), descrever(localizador), ausente);
+        return ausente;
     }
 
     /**
@@ -155,24 +209,47 @@ public abstract class BasePage {
                     .until(d -> condicao.getAsBoolean());
             return true;
         } catch (TimeoutException e) {
+            log.debug("Condição não atendida em {} s", tempo.toSeconds());
             return false;
         }
     }
 
     /** Busca imediata (sem espera) de todos os elementos que atendem ao localizador. */
     protected List<WebElement> buscarTodos(By localizador) {
-        return driver.findElements(localizador);
+        List<WebElement> elementos = driver.findElements(localizador);
+        log.debug("Busca imediata: {} -> {} elemento(s)", descrever(localizador), elementos.size());
+        return elementos;
     }
 
     // ---------- Ações ----------
 
     /** Espera o elemento ficar clicável e toca nele. */
     protected void clicar(By localizador) {
+        log.info("Tocar: {}", descrever(localizador));
         esperarClicavel(localizador).click();
+    }
+
+    /**
+     * Toca no botão e confirma que o app foi para a tela seguinte. Se a tela seguinte não
+     * aparecer no tempo curto e o botão continuar na tela, o toque se perdeu (comum logo após a
+     * tela abrir, enquanto o app ainda carrega) e é repetido uma única vez.
+     * <p>
+     * Não espera a tela seguinte até o fim: quem chama continua esperando por ela normalmente.
+     */
+    protected void clicarConfirmandoSaida(By botao, By telaSeguinte) {
+        clicar(botao);
+        if (estaVisivel(telaSeguinte, Configuracao.esperaCurta())) {
+            return;
+        }
+        if (estaVisivel(botao, Duration.ofSeconds(1))) {
+            log.warn("O toque em {} não teve efeito: tocando de novo", descrever(botao));
+            clicar(botao);
+        }
     }
 
     /** Limpa o campo e digita o texto informado. */
     protected void digitar(By localizador, String texto) {
+        log.info("Digitar \"{}\" em: {}", texto, descrever(localizador));
         WebElement campo = esperarVisivel(localizador);
         campo.clear();
         campo.sendKeys(texto);
@@ -180,12 +257,15 @@ public abstract class BasePage {
 
     /** Espera o elemento aparecer e devolve o texto dele. */
     protected String obterTexto(By localizador) {
-        return esperarVisivel(localizador).getText();
+        String texto = esperarVisivel(localizador).getText();
+        log.debug("Texto lido de {}: \"{}\"", descrever(localizador), texto);
+        return texto;
     }
 
     /** Fecha o teclado virtual quando ele está aberto, para não cobrir botões da tela. */
     protected void esconderTeclado() {
         if (driver.isKeyboardShown()) {
+            log.info("Fechar o teclado virtual");
             driver.hideKeyboard();
         }
     }
@@ -193,11 +273,13 @@ public abstract class BasePage {
     /** Pressiona o botão "voltar" do Android, fechando o teclado antes se estiver aberto. */
     protected void voltar() {
         esconderTeclado();
+        log.info("Pressionar o botão \"voltar\" do Android");
         driver.navigate().back();
     }
 
     /** Rola a primeira área rolável da tela até encontrar o texto informado e o retorna. */
     protected WebElement rolarAteTexto(String texto) {
+        log.info("Rolar a tela até o texto \"{}\"", texto);
         return esperarVisivel(AppiumBy.androidUIAutomator(
                 "new UiScrollable(new UiSelector().scrollable(true))"
                         + ".scrollIntoView(new UiSelector().text(" + literalUiSelector(texto) + "))"));

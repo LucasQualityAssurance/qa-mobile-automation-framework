@@ -63,6 +63,7 @@ public class MenuLateral extends BasePage {
      */
     @Step("Selecionar \"{opcao}\" no menu lateral")
     public TelaListaTarefas selecionar(String opcao) {
+        log.info("Tocar no item \"{}\" do menu lateral", opcao);
         esperarPosicaoEstavel(itemDoMenu(opcao)).click();
         return new TelaListaTarefas().aguardarCarregamento();
     }
