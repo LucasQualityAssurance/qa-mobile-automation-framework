@@ -41,20 +41,22 @@ uso: cadastro completo de tarefas, edição, conclusão, exclusão, busca, orden
 | Allure (Java + Cucumber) | 3.1.1 | Registro dos passos, anexos e resultado de cada cenário |
 | Allure Report | 2.30.0 | Relatório HTML com gráficos, ambiente da execução, passos e screenshots |
 | Datafaker | 2.7.0 | Geração de dados aleatórios |
-| Logback | 1.6.8 | Log da execução no terminal |
+| Logback | 1.6.8 | Log da execução no terminal e nos anexos do Allure |
 | Maven | 3.9+ | Build, dependências e execução pela linha de comando |
 | Appium Server + UiAutomator2 | 3+ | Servidor que controla o aparelho Android |
 
 ## Funcionalidades e cenários
 
-Os cenários ficam em `src/test/resources/features`. Cada cenário valida **um comportamento** e
-prepara a própria massa de dados, então pode ser executado sozinho e em qualquer ordem.
+Os cenários ficam em `src/test/resources/features`. Cada cenário percorre **uma jornada de
+negócio** (uma `Regra`) sobre a mesma massa: as tarefas são criadas uma única vez e cada etapa
+`Quando`/`Então` parte do resultado da anterior, como no uso real do app. Cada cenário prepara e
+limpa a própria massa, então pode ser executado sozinho e em qualquer ordem.
 
 | Funcionalidade (tag) | Cenários | O que é validado |
 |---|---|---|
 | `cadastro_tarefa.feature` (`@cadastro`) | 1 (`@smoke`) | Cadastro completo com vencimento hoje, prioridade alta, lista "Projetos de TI" e subtarefa. Valida o grupo "Vencimento hoje", o recuo da subtarefa, o filtro "Hoje", a lista do projeto e os dados gravados ao reabrir |
-| `ciclo_vida_tarefa.feature` (`@ciclo-vida`) | 8 | Confirmação ao sair com alterações pendentes, continuar editando, descartar, salvar novo título, concluir com as concluídas ocultas e exibidas, reabrir e excluir (inclusive da busca) |
-| `organizacao_lista.feature` (`@organizacao`) | 5 | Busca por termo existente e inexistente, ordenação por título e por prioridade (esquema do cenário) e tarefa vencida agrupada como "Atrasado" |
+| `ciclo_vida_tarefa.feature` (`@ciclo-vida`) | 2 | Edição: confirmação ao sair com alterações pendentes, continuar editando, descartar e salvar novo título. Conclusão: concluir com as concluídas ocultas e exibidas, reabrir e excluir (inclusive da busca) |
+| `organizacao_lista.feature` (`@organizacao`) | 2 | Busca por termo existente e inexistente e ordenação por título e por prioridade sobre a mesma massa; tarefa vencida agrupada como "Atrasado" |
 
 Exemplo:
 
@@ -65,12 +67,19 @@ Funcionalidade: Ciclo de vida da tarefa
   Contexto:
     Dado que existe a tarefa "Corrigir bug no login"
 
-  Regra: Tarefas concluídas podem ser ocultadas ou exibidas na lista
+  Regra: Tarefas concluídas podem ser ocultadas, exibidas, reabertas e excluídas
 
-    Cenário: Concluir uma tarefa com as concluídas ocultas
+    Cenário: Concluir, reabrir e excluir a tarefa
       Dado que as tarefas concluídas estão ocultas
       Quando eu concluo a tarefa "Corrigir bug no login"
       Então a tarefa "Corrigir bug no login" deixa de aparecer na lista
+
+      Quando eu passo a exibir as tarefas concluídas
+      Então a tarefa "Corrigir bug no login" aparece no grupo "Concluída"
+
+      Quando eu reabro a tarefa "Corrigir bug no login"
+      Então a tarefa "Corrigir bug no login" aparece no grupo "Sem data de vencimento"
+      ...
 ```
 
 As validações comparam os textos do aplicativo em **português (Brasil)**.
@@ -88,34 +97,40 @@ qa-mobile-automation-framework/
         │   └── pages/                            # Page objects: BasePage + uma classe por tela
         └── test
             ├── java
-            │   ├── executor/ExecutarCenariosTest.java  # Suíte da JUnit Platform que aciona o Cucumber
-            │   ├── passos/                       # Step definitions (Dado / Quando / Então)
-            │   ├── ganchos/Ganchos.java          # Hooks: sessão, tela inicial, evidências e limpeza
-            │   ├── ganchos/TiposParametro.java   # Tipo {prioridade} usado nos passos
-            │   ├── suporte/ContextoCenario.java  # Estado do cenário compartilhado entre os passos
-            │   ├── suporte/Evidencias.java       # Screenshot e hierarquia da tela
-            │   ├── suporte/AllureAmbiente.java   # Ambiente da execução na visão geral do Allure
-            │   └── suporte/RegistroEtapas.java   # Plugin que escreve cenários e passos no terminal
+            │   ├── runner/ExecutarCenariosTest.java    # Suíte da JUnit Platform que aciona o Cucumber
+            │   ├── steps/                        # Step definitions (Dado / Quando / Então)
+            │   ├── hooks/Ganchos.java            # Hooks: sessão, tela inicial e limpeza da massa
+            │   ├── hooks/TiposParametro.java     # Tipo {prioridade} usado nos passos
+            │   ├── support/ContextoCenario.java  # Estado do cenário compartilhado entre os passos
+            │   ├── support/Evidencias.java       # Screenshot e hierarquia da tela
+            │   ├── support/AllureAmbiente.java   # Ambiente da execução na visão geral do Allure
+            │   ├── support/CapturaLog.java       # Guarda os logs de cada passo e cenário para o Allure
+            │   ├── support/LimpezaResultadosAllure.java  # Apaga os resultados da execução anterior
+            │   └── support/RegistroEtapas.java   # Plugin: log no terminal e anexos (log, telas) no Allure
             └── resources
                 ├── features/                     # Cenários em Gherkin (português)
                 ├── config.properties             # Configuração padrão (versionada)
                 ├── config.local.properties.exemplo  # Modelo dos dados do seu aparelho
-                ├── junit-platform.properties     # Configuração do Cucumber (glue, plugins)
+                ├── junit-platform.properties     # Configuração do Cucumber (glue, plugins) para o Maven
+                ├── cucumber.properties           # A mesma configuração, para rodar a feature pela IDE
                 ├── allure.properties
-                └── logback-test.xml
+                └── logback-test.xml              # Terminal (INFO) e anexos do Allure (DEBUG)
 ```
 
 Como as peças se encaixam:
 
 - **Features (`features/*.feature`)**: descrevem o comportamento em linguagem de negócio, sem
   detalhes de tela.
-- **Passos (`passos/`)**: ligam cada frase do Gherkin aos Page Objects. São separados por assunto:
+- **Passos (`steps/`)**: ligam cada frase do Gherkin aos Page Objects. São separados por assunto:
   cadastro, edição, conclusão, busca/ordenação e validações (`Então`).
 - **`ContextoCenario`**: criado a cada cenário pelo PicoContainer e injetado nos passos. Guarda a
   tela atual e registra a massa criada, para a limpeza ao final.
 - **`Ganchos`**: abre uma única sessão Appium para toda a execução (`@BeforeAll`), volta para
-  "Minhas tarefas" antes de cada cenário (`@Before`), anexa um screenshot após cada passo
-  (`@AfterStep`) e, ao final do cenário (`@After`), anexa as evidências da falha e exclui a massa.
+  "Minhas tarefas" antes de cada cenário (`@Before`) e, ao final do cenário (`@After`), exclui a
+  massa.
+- **`RegistroEtapas`** (plugin do Cucumber): escreve cada cenário e passo no terminal e anexa, dentro
+  de cada passo do Allure, o log da etapa e o screenshot; na falha, também a hierarquia da tela. Fica
+  antes do plugin do Allure em `cucumber.plugin`, para os anexos entrarem no passo certo.
 - **Page objects (`pages/`)**: cada tela tem uma classe com seus localizadores e ações. Os passos
   só conversam com elas.
 - **`BasePage`**: concentra as interações comuns (clicar, digitar, rolar, esperar), sempre com
@@ -211,7 +226,7 @@ INFO  [CENARIO] Cadastrar tarefa completa com vencimento, prioridade, lista e su
 INFO  [ETAPA] Dado que existe a lista "Projetos de TI"
 INFO  [ETAPA] Quando eu cadastro a tarefa "Configurar pipeline de CI/CD" com os dados:
 ...
-14 scenarios (14 passed)
+5 scenarios (5 passed)
 [INFO] BUILD SUCCESS
 ```
 
@@ -259,11 +274,24 @@ Todas as chaves do `config.properties` podem ser sobrescritas com `-D`
 2. Confira o JDK em **File → Project Structure → Project → SDK**: deve ser um JDK 21.
 3. Instale os plugins **Cucumber for Java** e **Gherkin** (Settings → Plugins) para navegar da
    feature até o passo com Ctrl+clique.
-4. Com o servidor Appium rodando, abra `src/test/java/executor/ExecutarCenariosTest.java` e clique
+4. Com o servidor Appium rodando, abra `src/test/java/runner/ExecutarCenariosTest.java` e clique
    no ▶ verde ao lado da classe. Os cenários aparecem agrupados por funcionalidade.
 
 Opções de execução vão em **Run → Edit Configurations… → VM options**
 (ex.: `-Dcucumber.filter.tags=@smoke`).
+
+Também é possível rodar uma feature ou um cenário pelo ▶ ao lado dele no arquivo `.feature`. Nesse
+modo o IntelliJ chama o Cucumber pela linha de comando, que lê o `cucumber.properties` (e não o
+`junit-platform.properties`); por isso os dois arquivos têm a mesma configuração. Uma diferença
+em relação ao Maven:
+
+- **Ações dos Page Objects como subpassos no Allure**: dependem do agente do AspectJ, que o Maven
+  já configura. Para tê-las também pela IDE, adicione uma única vez em
+  **Run → Edit Configurations… → Edit configuration templates… → Cucumber Java → VM options**:
+  ```
+  -javaagent:"<pasta do usuário>\.m2\repository\org\aspectj\aspectjweaver\1.9.27\aspectjweaver-1.9.27.jar"
+  ```
+  Sem o agente, o relatório continua com os passos, os logs e os screenshots.
 
 ## Relatório Allure
 
@@ -274,9 +302,11 @@ mvn allure:serve     # gera o relatório e abre no navegador
 
 Não é preciso instalar o Allure: o plugin do Maven baixa a ferramenta na primeira vez.
 
-A cada execução, os resultados, as evidências e o relatório da execução anterior são apagados
-automaticamente, para o relatório mostrar só a execução atual e a pasta `target` não crescer.
-Para acumular várias execuções no mesmo relatório:
+A cada execução, os resultados e as evidências (prints, logs, XML) da execução anterior são
+apagados automaticamente, para o relatório mostrar só a execução atual e a pasta `target` não
+crescer. Vale para o Maven e também para a execução pela IDE: a limpeza é feita pelo próprio
+código, no início da execução (`support/LimpezaResultadosAllure.java`). O Maven também apaga o
+relatório HTML gerado anteriormente. Para acumular várias execuções no mesmo relatório:
 
 ```bash
 mvn test -Dallure.manter.resultados=true
@@ -289,8 +319,28 @@ O relatório mostra:
 - os cenários agrupados por funcionalidade, com as tags e a severidade (`@severity=blocker`,
   `@severity=critical`, `@severity=normal`);
 - cada cenário com seus passos `Dado` / `Quando` / `Então`, as ações dos Page Objects dentro de
-  cada passo e o screenshot da tela ao final de cada passo;
-- em caso de falha, o screenshot e a hierarquia da tela (XML) no momento do erro.
+  cada passo e, como anexos do passo (abra o passo para vê-los):
+  - **Tela após a etapa**: o screenshot ao final do passo;
+  - **Log da etapa**: tudo o que aconteceu no passo (toques, textos digitados, esperas e
+    localizadores usados, duração);
+- em caso de falha, dentro do passo que falhou: o screenshot e a hierarquia da tela (XML) no
+  momento do erro e o log com a mensagem de erro e o localizador que estourou o tempo;
+- no corpo do cenário, visíveis sem abrir nenhum passo:
+  - **Tela ao final do cenário** (ou **Tela no momento da falha**): o último print tirado;
+  - **Log completo do cenário**: a preparação, todos os passos, a limpeza da massa e o resultado.
+
+O terminal mostra só o essencial (nível INFO: cenários, passos e ações). Os anexos do Allure trazem
+também o nível DEBUG (esperas, consultas e localizadores). Os níveis ficam no `logback-test.xml`.
+
+Exemplo ilustrativo de "Log da etapa" (os localizadores reais variam conforme a tela):
+
+```
+07:12:03.114 INFO  [ETAPA] Quando eu altero o título da tarefa "Corrigir bug no login" para "Corrigir bug no login e publicar hotfix" e salvo
+07:12:03.120 INFO  [TelaListaTarefas] Tocar: androidUIAutomator: new UiSelector().text("Corrigir bug no login")
+07:12:03.121 DEBUG [TelaListaTarefas] Aguardando ficar clicável: androidUIAutomator: new UiSelector().text("Corrigir bug no login")
+07:12:03.902 INFO  [TelaEdicaoTarefa] Digitar "Corrigir bug no login e publicar hotfix" em: id: org.tasks:id/title
+07:12:04.517 DEBUG [ETAPA] Concluída: Quando eu altero o título da tarefa ... e salvo (1.4 s)
+```
 
 ## Estado do aplicativo entre os cenários
 
@@ -306,8 +356,10 @@ O relatório mostra:
 
 ## Boas práticas adotadas
 
-- **BDD em linguagem de negócio**: as features não citam botões, ids ou telas; um comportamento
-  por cenário, com `Regra`, `Contexto` e `Esquema do Cenário` onde fazem sentido.
+- **BDD em linguagem de negócio**: as features não citam botões, ids ou telas; uma jornada por
+  cenário, agrupada por `Regra`, com `Contexto` para a massa compartilhada.
+- **Execução enxuta**: a massa é criada uma vez por jornada, em vez de recriada a cada
+  comportamento, evitando repetir cadastro, navegação e limpeza a cada cenário.
 - **Cenários independentes**: cada um prepara e limpa a própria massa e pode rodar sozinho.
 - **Page Object Model**: localizadores e ações ficam nas telas; os passos descrevem o comportamento.
 - **Esperas explícitas**: nenhuma sincronização com pausas fixas; o Appium aguarda o elemento ficar
@@ -325,7 +377,7 @@ O relatório mostra:
    `# language: pt` na primeira linha), reaproveitando as frases que já existem.
 2. **Rode o dry-run** (`mvn test -Dcucumber.execution.dry-run=true`): o Cucumber lista as frases
    sem implementação e sugere o código do passo.
-3. **Implemente os passos novos** na classe de `passos/` do assunto, recebendo o
+3. **Implemente os passos novos** na classe de `steps/` do assunto, recebendo o
    `ContextoCenario` no construtor. Registre as tarefas criadas com
    `contexto.registrarTarefaCriada(...)` para que a limpeza as exclua.
 4. **Crie ou reaproveite os page objects** em `src/main/java/pages`, herdando de `BasePage`.
