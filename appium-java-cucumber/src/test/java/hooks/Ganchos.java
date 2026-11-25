@@ -1,13 +1,10 @@
 package hooks;
 
-import config.Configuracao;
 import driver.GerenciadorDriver;
 import io.cucumber.java.After;
 import io.cucumber.java.AfterAll;
-import io.cucumber.java.AfterStep;
 import io.cucumber.java.Before;
 import io.cucumber.java.BeforeAll;
-import io.cucumber.java.Scenario;
 import io.qameta.allure.Allure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,8 +12,6 @@ import pages.NavegacaoApp;
 import pages.TelaListaTarefas;
 import support.AllureAmbiente;
 import support.ContextoCenario;
-import support.Evidencias;
-import support.RegistroEtapas;
 
 /**
  * Hooks do Cucumber: o que acontece antes e depois da execução, de cada cenário e de cada passo.
@@ -25,13 +20,12 @@ import support.RegistroEtapas;
  *       ambiente no Allure;</li>
  *   <li>{@code @Before}: traz o app para frente e volta para "Minhas tarefas", a partir de
  *       qualquer tela em que o cenário anterior tenha parado;</li>
- *   <li>{@code @AfterStep}: anexa o screenshot da tela ao final de cada passo;</li>
- *   <li>{@code @After}: anexa screenshot e hierarquia da tela quando o cenário falha e depois
- *       exclui a massa criada, restaurando as preferências alteradas;</li>
+ *   <li>{@code @After}: exclui a massa criada e restaura as preferências alteradas;</li>
  *   <li>{@code @AfterAll}: encerra a sessão Appium.</li>
  * </ul>
- * Os hooks {@code @After} rodam do maior {@code order} para o menor: as evidências são
- * capturadas antes da limpeza, que muda a tela.
+ * Logs, screenshots de cada passo e evidências de falha não ficam aqui: são anexados pelo plugin
+ * {@link support.RegistroEtapas}, dentro do próprio passo no Allure. Um {@code @AfterStep} faria
+ * cada screenshot aparecer como um passo extra ("hooks.Ganchos...") entre os passos do cenário.
  */
 public class Ganchos {
 
@@ -65,26 +59,9 @@ public class Ganchos {
     @Before
     public void prepararTelaInicial() {
         Allure.epic(EPICO);
+        LOG.info("Preparação: levando o app para \"Minhas tarefas\"");
         GerenciadorDriver.garantirAplicativoEmPrimeiroPlano();
         contexto.definirLista(new NavegacaoApp().irParaMinhasTarefas());
-    }
-
-    @AfterStep
-    public void anexarTelaDaEtapa(Scenario cenario) {
-        if (Configuracao.obterBooleano("evidencia.sempre")) {
-            Evidencias.capturarTela().ifPresent(imagem ->
-                    cenario.attach(imagem, "image/png", "Tela após: " + RegistroEtapas.etapaAtual()));
-        }
-    }
-
-    @After(order = 20)
-    public void anexarEvidenciasDaFalha(Scenario cenario) {
-        if (cenario.isFailed()) {
-            Evidencias.capturarTela().ifPresent(imagem ->
-                    cenario.attach(imagem, "image/png", "Tela no momento da falha"));
-            Evidencias.capturarHierarquia().ifPresent(xml ->
-                    cenario.attach(xml, "text/xml", "Hierarquia da tela no momento da falha"));
-        }
     }
 
     /**
@@ -95,18 +72,23 @@ public class Ganchos {
     @After(order = 10)
     public void limparMassa() {
         if (!GerenciadorDriver.sessaoAtiva()) {
+            LOG.warn("Limpeza ignorada: a sessão Appium não está ativa");
             return;
         }
+        LOG.info("Limpeza: tarefas a excluir {}", contexto.tarefasParaLimpar());
         try {
             TelaListaTarefas lista = new NavegacaoApp().irParaMinhasTarefas();
             if (contexto.exibicaoConcluidasAlterada()) {
+                LOG.info("Limpeza: voltando a exibir as tarefas concluídas");
                 lista = lista.abrirOrdenacao().definirMostrarConcluidas(true).fechar();
             }
             for (String tarefa : contexto.tarefasParaLimpar()) {
                 lista = excluirSeExistir(lista, tarefa);
             }
+            LOG.info("Limpeza concluída");
         } catch (RuntimeException e) {
             LOG.warn("Não foi possível concluir a limpeza da massa do cenário: {}", e.getMessage());
+            LOG.debug("Detalhes do erro na limpeza", e);
         }
     }
 

@@ -1,7 +1,19 @@
 <configuration>
+    <!-- Terminal: somente INFO ou acima (cenários, etapas e ações nas telas) -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} %-5level [%logger{0}] %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Relatório Allure: inclui o DEBUG (esperas e localizadores), anexado a cada etapa e cenário -->
+    <appender name="ALLURE" class="support.CapturaLog">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %-5level [%logger{0}] %msg%n%ex</pattern>
+            <charset>UTF-8</charset>
         </encoder>
     </appender>
 
@@ -10,7 +22,9 @@
     <logger name="io.appium" level="WARN"/>
     <logger name="io.qameta.allure" level="WARN"/>
 
-    <root level="INFO">
+    <!-- DEBUG do projeto (esperas, localizadores, durações) vai só para o Allure: o terminal filtra INFO -->
+    <root level="DEBUG">
         <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ALLURE"/>
     </root>
 </configuration>

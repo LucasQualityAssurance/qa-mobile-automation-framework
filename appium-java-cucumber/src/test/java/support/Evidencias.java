@@ -8,7 +8,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Optional;
 
 /**
- * Captura das evidências anexadas ao relatório Allure pelos hooks da classe {@code hooks.Ganchos}.
+ * Captura das evidências (screenshot e hierarquia da tela) anexadas ao relatório Allure pelo
+ * plugin {@link RegistroEtapas}.
  * <p>
  * Uma falha ao capturar a evidência apenas gera um aviso no log e devolve vazio: ela nunca
  * derruba o cenário nem esconde o erro original.
