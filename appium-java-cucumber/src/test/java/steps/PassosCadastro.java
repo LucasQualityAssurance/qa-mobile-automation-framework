@@ -22,6 +22,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * <p>
  * Toda tarefa criada aqui é registrada no {@link ContextoCenario} e excluída pelo hook de
  * limpeza ao final do cenário.
+ * <p>
+ * Os passos {@code Dado} preparam a massa e já validam que ela foi criada: se a preparação
+ * falhar, o erro aponta para a preparação, e não para o comportamento testado depois.
  */
 public class PassosCadastro {
 
@@ -32,6 +35,7 @@ public class PassosCadastro {
 
     private final ContextoCenario contexto;
 
+    /** O PicoContainer injeta o mesmo {@link ContextoCenario} em todas as classes de passos do cenário. */
     public PassosCadastro(ContextoCenario contexto) {
         this.contexto = contexto;
     }
@@ -39,12 +43,16 @@ public class PassosCadastro {
     /**
      * Garante que a lista local existe, criando-a só quando ainda não aparece no menu.
      * Ao final, volta para "Minhas tarefas".
+     * <p>
+     * A lista não entra na limpeza: ela é reaproveitada entre execuções e some quando os dados do
+     * app são limpos no início da suíte.
      */
     @Dado("que existe a lista {string}")
     public void queExisteALista(String nomeLista) {
         MenuLateral menu = contexto.lista().abrirMenuLateral();
         if (!menu.exibeOpcao(nomeLista)) {
             menu.criarLista(nomeLista);
+            // Ao criar a lista, o app sai do menu: abre de novo para voltar a "Minhas tarefas".
             menu = contexto.lista().abrirMenuLateral();
         }
         TelaListaTarefas lista = menu.selecionar(MINHAS_TAREFAS);
@@ -52,6 +60,10 @@ public class PassosCadastro {
         contexto.definirLista(lista);
     }
 
+    /**
+     * Cria uma tarefa só com o título (sem data, prioridade ou lista) e confere que ela aparece.
+     * Usado no {@code Contexto} do ciclo de vida, que só precisa de uma tarefa simples.
+     */
     @Dado("que existe a tarefa {string}")
     public void queExisteATarefa(String titulo) {
         contexto.definirLista(contexto.lista().criarTarefa(titulo));
@@ -61,7 +73,12 @@ public class PassosCadastro {
                 .isTrue();
     }
 
-    /** Tabela com as colunas "título" e "prioridade". */
+    /**
+     * Cria várias tarefas a partir de uma tabela com as colunas "título" e "prioridade" (a
+     * prioridade é opcional). Cada linha vira um {@code Map} com o cabeçalho como chave.
+     * <p>
+     * Só confere a massa no final, de uma vez, para não ler a lista a cada tarefa criada.
+     */
     @Dado("que existem as tarefas:")
     public void queExistemAsTarefas(List<Map<String, String>> tarefas) {
         for (Map<String, String> tarefa : tarefas) {
@@ -88,10 +105,13 @@ public class PassosCadastro {
      */
     @Quando("eu cadastro a tarefa {string} com os dados:")
     public void euCadastroATarefaComOsDados(String titulo, Map<String, String> dados) {
+        // Falha logo se a tabela tiver um campo com nome errado (ex.: "data" em vez de
+        // "vencimento"), em vez de ignorá-lo em silêncio e cadastrar a tarefa incompleta.
         assertThat(CAMPOS_CADASTRO)
                 .as("Campos aceitos na tabela de cadastro")
                 .containsAll(dados.keySet());
 
+        // Os campos são preenchidos na ordem em que aparecem na tela, e só os informados.
         TelaEdicaoTarefa edicao = contexto.lista().tocarEmNovaTarefa().informarTitulo(titulo);
         if (dados.containsKey("vencimento")) {
             definirVencimento(edicao, dados.get("vencimento"));
@@ -116,6 +136,8 @@ public class PassosCadastro {
             edicao.definirVencimentoHoje();
             return;
         }
+        // A data de referência é a do aparelho, não a do computador: perto da meia-noite, ou com
+        // fusos diferentes, "ontem" calculado no computador poderia ser outro dia no app.
         LocalDate hoje = GerenciadorDriver.dataDoAparelho();
         LocalDate data = switch (valor) {
             case "ontem" -> hoje.minusDays(1);
