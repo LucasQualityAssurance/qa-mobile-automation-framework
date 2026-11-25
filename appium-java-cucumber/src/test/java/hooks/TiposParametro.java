@@ -1,4 +1,4 @@
-package ganchos;
+package hooks;
 
 import io.cucumber.java.ParameterType;
 import pages.Prioridade;

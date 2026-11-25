@@ -1,10 +1,10 @@
-package passos;
+package steps;
 
 import io.cucumber.java.pt.Então;
 import pages.Prioridade;
 import pages.TelaEdicaoTarefa;
 import pages.TelaListaTarefas;
-import suporte.ContextoCenario;
+import support.ContextoCenario;
 
 import java.util.List;
 

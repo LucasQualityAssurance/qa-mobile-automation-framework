@@ -1,4 +1,4 @@
-package executor;
+package runner;
 
 import org.junit.platform.suite.api.IncludeEngines;
 import org.junit.platform.suite.api.SelectPackages;

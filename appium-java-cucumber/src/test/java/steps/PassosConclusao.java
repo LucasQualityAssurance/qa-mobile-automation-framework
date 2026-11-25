@@ -1,9 +1,9 @@
-package passos;
+package steps;
 
 import io.cucumber.java.pt.Dado;
 import io.cucumber.java.pt.Quando;
 import pages.TelaListaTarefas;
-import suporte.ContextoCenario;
+import support.ContextoCenario;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

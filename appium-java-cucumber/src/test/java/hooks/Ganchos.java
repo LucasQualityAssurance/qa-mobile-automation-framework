@@ -1,4 +1,4 @@
-package ganchos;
+package hooks;
 
 import config.Configuracao;
 import driver.GerenciadorDriver;
@@ -13,10 +13,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pages.NavegacaoApp;
 import pages.TelaListaTarefas;
-import suporte.AllureAmbiente;
-import suporte.ContextoCenario;
-import suporte.Evidencias;
-import suporte.RegistroEtapas;
+import support.AllureAmbiente;
+import support.ContextoCenario;
+import support.Evidencias;
+import support.RegistroEtapas;
 
 /**
  * Hooks do Cucumber: o que acontece antes e depois da execução, de cada cenário e de cada passo.

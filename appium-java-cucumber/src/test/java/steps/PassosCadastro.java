@@ -1,4 +1,4 @@
-package passos;
+package steps;
 
 import driver.GerenciadorDriver;
 import io.cucumber.java.pt.Dado;
@@ -6,8 +6,8 @@ import io.cucumber.java.pt.Quando;
 import pages.MenuLateral;
 import pages.TelaEdicaoTarefa;
 import pages.TelaListaTarefas;
-import suporte.ContextoCenario;
-import ganchos.TiposParametro;
+import support.ContextoCenario;
+import hooks.TiposParametro;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;

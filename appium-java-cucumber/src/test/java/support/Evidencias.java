@@ -1,4 +1,4 @@
-package suporte;
+package support;
 
 import driver.GerenciadorDriver;
 import org.openqa.selenium.OutputType;
@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Optional;
 
 /**
- * Captura das evidências anexadas ao relatório Allure pelos hooks da classe {@code ganchos.Ganchos}.
+ * Captura das evidências anexadas ao relatório Allure pelos hooks da classe {@code hooks.Ganchos}.
  * <p>
  * Uma falha ao capturar a evidência apenas gera um aviso no log e devolve vazio: ela nunca
  * derruba o cenário nem esconde o erro original.

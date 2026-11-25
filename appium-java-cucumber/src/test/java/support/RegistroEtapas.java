@@ -1,4 +1,4 @@
-package suporte;
+package support;
 
 import io.cucumber.plugin.ConcurrentEventListener;
 import io.cucumber.plugin.event.EventPublisher;

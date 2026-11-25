@@ -1,8 +1,8 @@
-package passos;
+package steps;
 
 import io.cucumber.java.pt.Quando;
 import net.datafaker.Faker;
-import suporte.ContextoCenario;
+import support.ContextoCenario;
 
 /**
  * Passos de busca e de ordenação da lista.

@@ -1,8 +1,8 @@
-package passos;
+package steps;
 
 import io.cucumber.java.pt.Dado;
 import io.cucumber.java.pt.Quando;
-import suporte.ContextoCenario;
+import support.ContextoCenario;
 
 /**
  * Passos de edição e exclusão de uma tarefa existente: alterar o título, salvar, sair da edição

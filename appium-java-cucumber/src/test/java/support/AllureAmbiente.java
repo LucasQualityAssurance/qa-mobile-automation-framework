@@ -1,4 +1,4 @@
-package suporte;
+package support;
 
 import config.Configuracao;
 import io.appium.java_client.android.AndroidDriver;

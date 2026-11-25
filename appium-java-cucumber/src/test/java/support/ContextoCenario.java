@@ -1,4 +1,4 @@
-package suporte;
+package support;
 
 import pages.TelaEdicaoTarefa;
 import pages.TelaListaTarefas;
